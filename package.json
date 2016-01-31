@@ -1,0 +1,34 @@
+{
+  "name": "calc-inflation",
+  "version": "1.0.0",
+  "description": "Bulk calculation of inflation-adjusted values from BLS data.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shoemaker/calc-inflation.git"
+  },
+  "keywords": [
+    "inflation",
+    "bls"
+  ],
+  "author": {
+    "name": "Brian Shoemaker",
+    "email": "brianshoemaker+dev@gmail.com",
+    "url": "http://brianshoemaker.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shoemaker/calc-inflation/issues"
+  },
+  "dependencies": {
+    "bluebird": "^3.1.5",
+    "handlebars": "^4.0.5",
+    "lodash": "^4.0.1",
+    "moment": "^2.11.1",
+    "request": "^2.67.0"
+  }
+}
