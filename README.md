@@ -12,3 +12,7 @@ Node.js console app to bulk calculate inflation-adjusted values, with data from 
     $> npm start
 The console app will request CPI data from the BLS, calculate the inflation-adjusted values found in 'input.json', then write a CSV file. 
 
+## Tests
+Using [Mocha](http://visionmedia.github.io/mocha/) and [Expect](https://github.com/LearnBoost/expect.js) to test the BLS API. 
+    
+    $> npm test
