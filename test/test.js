@@ -6,7 +6,7 @@ var bls = require('../controllers/bls');
 // Test the BLS controller
 describe('Bureau of Labor Statistics', function() {
     var response,
-        startDate = moment().subtract(5, 'years'),
+        startDate = moment().subtract(5, 'years').startOf('year'),
         monthCount = moment().diff(startDate, 'months');
 
     // Retreive data to power these tests. 
