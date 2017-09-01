@@ -30,7 +30,7 @@ exports.getCPIData = function(startYear) {
     }
 
     // Build up the request URL and options. 
-    var dataUrl = 'http://api.bls.gov/publicAPI/v2/timeseries/data/';
+    var dataUrl = 'https://api.bls.gov/publicAPI/v2/timeseries/data/';
     var options = { 
         uri: url.parse(dataUrl),
         method: 'POST',
