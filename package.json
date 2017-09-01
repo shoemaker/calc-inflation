@@ -1,6 +1,6 @@
 {
   "name": "calc-inflation",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Bulk calculation of inflation-adjusted values from BLS data.",
   "main": "index.js",
   "scripts": {
@@ -25,14 +25,14 @@
     "url": "https://github.com/shoemaker/calc-inflation/issues"
   },
   "dependencies": {
-    "bluebird": "^3.5.0",
-    "handlebars": "^4.0.5",
-    "lodash": "^4.17.4",
-    "moment": "^2.18.1",
-    "request": "^2.81.0"
+    "bluebird": "^3.1.5",
+    "handlebars": "^4.0.10",
+    "lodash": "^4.0.1",
+    "moment": "^2.11.1",
+    "request": "^2.67.0"
   },
   "devDependencies": {
     "expect.js": "^0.3.1",
-    "mocha": "^3.2.0"
+    "mocha": "^2.5.3"
   }
 }
