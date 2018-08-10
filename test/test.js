@@ -28,6 +28,6 @@ describe('Bureau of Labor Statistics', function() {
     });
 
     it('should return around ' + monthCount + ' records', function() {
-        expect(response.length).to.be.greaterThan(monthCount-1, monthCount+1);  // BLS may not have published current month when test is run. 
+        expect(response.length).to.be.within(monthCount-1, monthCount+1);  // BLS may not have published current month when test is run. 
     });
 });
