@@ -28,11 +28,11 @@
     "bluebird": "^3.1.5",
     "handlebars": "^4.0.10",
     "lodash": "^4.17.10",
-    "moment": "^2.22.1",
-    "request": "^2.86.0"
+    "moment": "^2.22.2",
+    "request": "^2.87.0"
   },
   "devDependencies": {
     "expect.js": "^0.3.1",
-    "mocha": "^2.5.3"
+    "mocha": "^5.2.0"
   }
 }
