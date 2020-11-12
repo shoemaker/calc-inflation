@@ -25,17 +25,17 @@
     "url": "https://github.com/shoemaker/calc-inflation/issues"
   },
   "dependencies": {
-    "bluebird": "^3.7.1",
-    "handlebars": "^4.5.1",
-    "lodash": "^4.17.15",
-    "moment": "^2.24.0",
-    "request": "^2.88.0"
+    "bluebird": "^3.7.2",
+    "handlebars": "^4.7.6",
+    "lodash": "^4.17.20",
+    "moment": "^2.29.1",
+    "request": "^2.88.2"
   },
   "devDependencies": {
     "expect.js": "^0.3.1",
-    "mocha": "^5.2.0"
+    "mocha": "^8.2.1"
   },
   "engines": {
-    "node": "12.13.0"
+    "node": "12.19.0"
   }
 }
