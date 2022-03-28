@@ -14,13 +14,11 @@ describe('Bureau of Labor Statistics', function() {
         this.timeout(10000);
         
         bls.getCPIData(startDate.format('YYYY'))  // Retrieve CPI data for date range. 
-        .catch(function(ex) {
-            console.log(ex);
-        })
-        .done(function(cpiData) { 
+        .then(function(cpiData) { 
             response = cpiData;
             finished();
-        }); 
+        })
+        .catch(ex => console.log(ex));
     });
 
     it('should have real data', function() {

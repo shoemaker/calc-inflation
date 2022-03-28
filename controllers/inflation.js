@@ -1,5 +1,4 @@
 var fs = require('fs'), 
-    Promise = require('bluebird'),
     moment = require('moment'),
     _ = require('lodash');
 
@@ -28,31 +27,30 @@ exports.calcInflationFromFile = function(filename, callback) {
     .then(function(cpiData) { 
         return calculateInflation(inputs, cpiData);  // Calculate inflation
     })
+    .then(function(summary) { 
+        callback(null, summary);
+    })
     .catch(function(ex) { 
         callback(ex);
-    })
-    .done(function(summary) { 
-        callback(null, summary);
-    });    
+    }); 
 }
 
 /*
  * Load the input file with dates/values to be adjusted for inflation.
  */
 function loadInputFile(filename) {
-    var d = Promise.defer();
-
-    // Load the config file. 
-    fs.readFile(filename, 'utf8', function (err, data) {
-        if (err) {
-            d.reject(err);
-        } else {
-            data = JSON.parse(data);
-            d.resolve(data);
-        }
+    return new Promise((resolve, reject) => {
+        // Load the config file. 
+        fs.readFile(filename, 'utf8', function (err, data) {
+            if (err) {
+                reject(err);
+                return;
+            } else {
+                data = JSON.parse(data);
+                resolve(data);
+            }
+        });
     });
-
-    return d.promise;
 }
 
 
@@ -60,47 +58,48 @@ function loadInputFile(filename) {
  * From a list of dates/years, determine the earliest year. 
  */
 function findFirstYear(inputValues) {
-    var d = Promise.defer(),
-        firstDate = moment();
+    var firstDate = moment();
+    
+    return new Promise((resolve, reject) => {
+        // Loop through all the values, look for earliest date. 
+        _.forEach(inputValues, function(value, key) {
+            var newDate = moment(value.date, 'MM/DD/YYYY');
+            if (newDate.isBefore(firstDate)) { firstDate = newDate; }
+        });
 
-    // Loop through all the values, look for earliest date. 
-    _.forEach(inputValues, function(value, key) {
-        var newDate = moment(value.date, 'MM/DD/YYYY');
-        if (newDate.isBefore(firstDate)) { firstDate = newDate; }
+        resolve(firstDate);
     });
-
-    d.resolve(firstDate);
-
-    return d.promise;
 }
 
 /*
  * Update the input data with a new inflation-adjusted current value. 
  */
 function calculateInflation(inputValues, cpiData) { 
-    var d = Promise.defer();
-
-    // Find the last inflation value
-    var lastCpi = _.last(cpiData).value;
-
-    _.forEach(inputValues, function(dataPoint) {
-        var theDate = moment(dataPoint.date, 'MM/DD/YYYY');
-
+    return new Promise((resolve, reject) => {
         try {
-            var cpi = _.find(cpiData, function(o) { return (o.year == theDate.year() && o.periodName == theDate.format('MMMM')); }).value;  // Exact month 
+            // Find the last inflation value
+            var lastCpi = _.last(cpiData).value;
+
+            _.forEach(inputValues, function(dataPoint) {
+                var theDate = moment(dataPoint.date, 'MM/DD/YYYY');
+
+                try {
+                    var cpi = _.find(cpiData, function(o) { return (o.year == theDate.year() && o.periodName == theDate.format('MMMM')); }).value;  // Exact month 
+                } catch (ex) {
+                    cpi = lastCpi;  // If date is too recent, no CPI data. 
+                }
+
+                // Calculate the inflation-adjusted value
+                var adj = ((lastCpi - cpi)/cpi) + 1; 
+                dataPoint.currValue = dataPoint.value * adj;
+
+                // Round it. 
+                dataPoint.currValue = _.round(dataPoint.currValue, 2);
+            });
+
+            resolve(inputValues);
         } catch (ex) {
-            cpi = lastCpi;  // If date is too recent, no CPI data. 
+            reject(ex)
         }
-
-        // Calculate the inflation-adjusted value
-        var adj = ((lastCpi - cpi)/cpi) + 1; 
-        dataPoint.currValue = dataPoint.value * adj;
-
-        // Round it. 
-        dataPoint.currValue = _.round(dataPoint.currValue, 2);
     });
-    
-    d.resolve(inputValues);
-
-    return d.promise;
 }

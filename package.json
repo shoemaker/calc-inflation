@@ -18,7 +18,7 @@
   "author": {
     "name": "Brian Shoemaker",
     "email": "brianshoemaker+dev@gmail.com",
-    "url": "http://brianshoemaker.com"
+    "url": "https://brianshoemaker.com"
   },
   "license": "MIT",
   "bugs": {
@@ -26,7 +26,6 @@
   },
   "dependencies": {
     "async": "^3.2.3",
-    "bluebird": "^3.1.5",
     "handlebars": "^4.0.10",
     "lodash": "^4.0.1",
     "moment": "^2.11.1",

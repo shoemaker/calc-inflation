@@ -7,7 +7,6 @@ http://inflationdata.com/inflation/Inflation_Articles/CalculateInflation.asp
 var fs = require('fs'),
     path = require('path'),
     url = require('url'),
-    Promise = require('bluebird'),
     _ = require('lodash'),
     moment = require('moment'),
     request = require('request');
@@ -20,8 +19,7 @@ var c = require('../config').config;  // App configuration
  * Request CPI data for each year between the startYear and today. 
  */ 
 exports.getCPIData = function(startYear) {
-    var d = Promise.defer();
-    
+
     function addReq(dStart, dEnd) {  
 
         // The actual function to return. 
@@ -80,15 +78,20 @@ exports.getCPIData = function(startYear) {
         startYear += MAX_REQUEST_YEARS + 1;
     }
 
-    async.series(reqQueue, function(err, results) {
-        // Combine the results
-        var final = [];
-        _.forEach(results, function (result) {
-            final = _.concat(final, result);
+    return new Promise((resolve, reject) => {
+        async.series(reqQueue, function(err, results) {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            // Combine the results
+            var final = [];
+            _.forEach(results, function (result) {
+                final = _.concat(final, result);
+            });
+    
+            resolve(final);
         });
-
-        d.resolve(final);
     });
-
-    return d.promise;
 }; 
