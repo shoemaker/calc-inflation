@@ -28,7 +28,7 @@ exports.calcInflationFromFile = function(filename, callback) {
     .then(function(cpiData) { 
         return calculateInflation(inputs, cpiData);  // Calculate inflation
     })
-    .catch(function(ex) {
+    .catch(function(ex) { 
         callback(ex);
     })
     .done(function(summary) { 
@@ -87,9 +87,7 @@ function calculateInflation(inputValues, cpiData) {
         var theDate = moment(dataPoint.date, 'MM/DD/YYYY');
 
         try {
-            // var cpi = _.find(cpiData, function(o) { return (o.year == theDate.year() && o.periodName == theDate.format('MMMM')); }).value;  // Exact month 
-            // var cpi = _.find(cpiData, function(o) { return (o.year == theDate.year() && o.periodName == 'January'); }).value;  // Beginning of year
-            var cpi = _.find(cpiData, function(o) { return (o.year == theDate.year()); }).value;  // Annual average 
+            var cpi = _.find(cpiData, function(o) { return (o.year == theDate.year() && o.periodName == theDate.format('MMMM')); }).value;  // Exact month 
         } catch (ex) {
             cpi = lastCpi;  // If date is too recent, no CPI data. 
         }
