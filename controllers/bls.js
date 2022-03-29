@@ -1,26 +1,62 @@
 /*
-http://www.bls.gov/help/hlpforma.htm#su
-http://api.bls.gov/publicAPI/v2/timeseries/data/SUUR0000SA0
+https://www.bls.gov/help/hlpforma.htm#CU
+http://api.bls.gov/publicAPI/v2/timeseries/data/CUUR0000SA0
 http://inflationdata.com/inflation/Inflation_Articles/CalculateInflation.asp
 */
 
-var fs = require('fs'),
-    path = require('path'),
-    url = require('url'),
-    Promise = require('bluebird'),
-    _ = require('lodash'),
+var _ = require('lodash'),
     moment = require('moment'),
-    request = require('request');
+    axios = require('axios'),
+    async = require('async');
 
 var c = require('../config').config;  // App configuration
 
-
 /*
- * Request CPI data for each between the startYear and today. 
+ * Request CPI data for each year between the startYear and today. 
  */ 
 exports.getCPIData = function(startYear) {
-    var d = Promise.defer();
-    
+
+    function addReq(dStart, dEnd) {  
+
+        // The actual function to return. 
+        return function(done) { 
+            // Build up the request URL and options. 
+            var options = { 
+                url: 'https://api.bls.gov/publicAPI/v2/timeseries/data/',
+                method: 'POST',
+                responseType: 'json',
+                timeout: c.requestTimeout,
+                data: {
+                    'seriesid' : ['CUUR0000SA0'],  // CPI, Urban Consumer: https://www.bls.gov/help/hlpforma.htm#CU
+                    'startyear': dStart,
+                    'endyear' : dEnd,
+                    'registrationKey' : c.blsAPIKey
+                }
+            };
+
+            // Request Chained-CPI data. 
+            axios(options)
+            .then(function(response) {
+                try { 
+                    var body = response.data;
+                    if (body.status == 'REQUEST_FAILED') {  // Problem with BLS API. 
+                        throw JSON.stringify(body.message);
+                    } else if (response.status == 200) {  // Good response, proceed. 
+                        var data = body.Results.series[0].data;  // Grab the data we're interested in.                 
+                        data = _.orderBy(data, ['year','period'], ['asc','asc']);  // Sort by year, then month. 
+                        done(null, data);
+                    } else {  // Problem with request. 
+                        throw error;
+                    }
+                } catch (ex) {
+                    var errorMsg = 'ERROR retrieving CPI data. ' + ex;
+                    done(errorMsg, data);
+                }
+            });
+        }
+    }  // END addReq().
+
+    var reqQueue = [];  // Array of BLS API requests.
     var endYear = moment();
     // No inflation data for the first month of the year. 
     if (endYear.month() == 0) {
@@ -28,75 +64,31 @@ exports.getCPIData = function(startYear) {
     } else {
         endYear = endYear.year();
     }
+    
+    startYear = parseInt(startYear);  // Make sure the start year is an int.
+    const MAX_REQUEST_YEARS = 10;  // The maximum number of years of data to request at a time. 
 
-    // Build up the request URL and options. 
-    var dataUrl = 'https://api.bls.gov/publicAPI/v2/timeseries/data/';
-    var options = { 
-        uri: url.parse(dataUrl),
-        method: 'POST',
-        json: true,
-        timeout: c.requestTimeout,
-        body: {
-            'seriesid' : ['SUUR0000SA0'],
-            'startyear': startYear,
-            'endyear' : endYear,
-            'registrationKey' : c.blsAPIKey
-        }
-    };
+    while (startYear <= (endYear)) { 
+        if ((endYear - startYear) > MAX_REQUEST_YEARS) reqQueue.push(addReq(startYear, (startYear + MAX_REQUEST_YEARS)));
+        else reqQueue.push(addReq(startYear, endYear));
 
-    // Request Chained-CPI data. 
-    request(options, function (error, response, body) {
-        try {
-            if (body.status == 'REQUEST_FAILED') {  // Problem with BLS API. 
-                throw JSON.stringify(body.message);
-            } else if (!error && response.statusCode == 200) {  // Good response, proceed. 
-                var data = body.Results.series[0].data;  // Grab the data we're interested in.                 
-                data = _.orderBy(data, ['year','period'], ['asc','asc']);  // Sort by year, then month. 
-                
-                d.resolve(data);
-            } else {  // Problem with request. 
-                throw error;
+        startYear += MAX_REQUEST_YEARS + 1;
+    }
+
+    return new Promise((resolve, reject) => {
+        async.series(reqQueue, function(err, results) {
+            if (err) {
+                reject(err);
+                return;
             }
-        } catch (ex) {
-            var errorMsg = 'ERROR retrieving CPI data. ' + ex;
-            d.reject(error);
-        } 
-    });
 
-    return d.promise;
+            // Combine the results
+            var final = [];
+            _.forEach(results, function (result) {
+                final = _.concat(final, result);
+            });
+    
+            resolve(final);
+        });
+    });
 }; 
-
-
-/*
- * Determine the average inflation rate for each year in range. 
- */
-function getAnnualAverage(data) {
-    results = [];
-
-    // Find the unique years in the data
-    var uniqYears = _.uniqBy(data, 'year'); 
-    var years = [];
-    _.forEach(uniqYears, function(year) {
-        years.push(year.year);
-    });
-
-    // Loop through the years, find the average inflation rate for each year. 
-    _.forEach(years, function(year) {
-        var currYear = _.filter(data, { 'year' : year }); 
-        var avgRate = 0;
-
-        // Add up the rate for each month of the year. 
-        _.reduce(currYear, function(result, value, key) { 
-            return avgRate += _.toNumber(value.value);
-        }); 
-
-        // Find the average for the current year. 
-        avgRate = avgRate / (currYear.length); 
-
-        // Add this year to the results. 
-        results.push({ 'year' : year, 'value' : avgRate});
-    });
-
-    return results;
-}
-
