@@ -4,16 +4,12 @@ http://api.bls.gov/publicAPI/v2/timeseries/data/CUUR0000SA0
 http://inflationdata.com/inflation/Inflation_Articles/CalculateInflation.asp
 */
 
-var fs = require('fs'),
-    path = require('path'),
-    url = require('url'),
-    _ = require('lodash'),
+var _ = require('lodash'),
     moment = require('moment'),
-    request = require('request');
+    axios = require('axios'),
     async = require('async');
 
 var c = require('../config').config;  // App configuration
-
 
 /*
  * Request CPI data for each year between the startYear and today. 
@@ -25,13 +21,12 @@ exports.getCPIData = function(startYear) {
         // The actual function to return. 
         return function(done) { 
             // Build up the request URL and options. 
-            var dataUrl = 'https://api.bls.gov/publicAPI/v2/timeseries/data/';
             var options = { 
-                uri: url.parse(dataUrl),
+                url: 'https://api.bls.gov/publicAPI/v2/timeseries/data/',
                 method: 'POST',
-                json: true,
+                responseType: 'json',
                 timeout: c.requestTimeout,
-                body: {
+                data: {
                     'seriesid' : ['CUUR0000SA0'],  // CPI, Urban Consumer: https://www.bls.gov/help/hlpforma.htm#CU
                     'startyear': dStart,
                     'endyear' : dEnd,
@@ -40,11 +35,13 @@ exports.getCPIData = function(startYear) {
             };
 
             // Request Chained-CPI data. 
-            request(options, function (error, response, body) {
-                try {
+            axios(options)
+            .then(function(response) {
+                try { 
+                    var body = response.data;
                     if (body.status == 'REQUEST_FAILED') {  // Problem with BLS API. 
                         throw JSON.stringify(body.message);
-                    } else if (!error && response.statusCode == 200) {  // Good response, proceed. 
+                    } else if (response.status == 200) {  // Good response, proceed. 
                         var data = body.Results.series[0].data;  // Grab the data we're interested in.                 
                         data = _.orderBy(data, ['year','period'], ['asc','asc']);  // Sort by year, then month. 
                         done(null, data);
@@ -54,7 +51,7 @@ exports.getCPIData = function(startYear) {
                 } catch (ex) {
                     var errorMsg = 'ERROR retrieving CPI data. ' + ex;
                     done(errorMsg, data);
-                } 
+                }
             });
         }
     }  // END addReq().
