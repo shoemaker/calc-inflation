@@ -6,7 +6,7 @@ var bls = require('../controllers/bls');
 // Test the BLS controller
 describe('Bureau of Labor Statistics', function() {
     var response,
-        startDate = moment().subtract(5, 'years').startOf('year'),
+        startDate = moment().subtract(25, 'years').startOf('year'),
         monthCount = moment().diff(startDate, 'months');
 
     // Retreive data to power these tests. 
@@ -14,13 +14,11 @@ describe('Bureau of Labor Statistics', function() {
         this.timeout(10000);
         
         bls.getCPIData(startDate.format('YYYY'))  // Retrieve CPI data for date range. 
-        .catch(function(ex) {
-            console.log(ex);
-        })
-        .done(function(cpiData) { 
+        .then(function(cpiData) { 
             response = cpiData;
             finished();
-        }); 
+        })
+        .catch(ex => console.log(ex));
     });
 
     it('should have real data', function() {
